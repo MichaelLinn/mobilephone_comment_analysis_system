@@ -6,7 +6,6 @@
 package javafxapplication1;
 
 import java.awt.event.MouseEvent;
-import static java.lang.Thread.sleep;
 import mobile.Mobilephone;
 import java.net.URL;
 import java.sql.SQLException;
@@ -29,6 +28,7 @@ import javafx.scene.chart.StackedBarChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
@@ -43,6 +43,11 @@ import javafx.scene.image.ImageView;
 import mobile.Mobile_category_info;
 import mobile.Mobile_info;
 import mobile.Page_data;
+
+// MongoDB
+import mobile.Mobile_brand_mongo;
+import mobile.Mobile_mongo;
+import mobile.Review_mongo;
 
 /**
  *
@@ -136,6 +141,20 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private ImageView image;
+    
+    @FXML
+    private ChoiceBox cb_b1;
+    @FXML
+    private ChoiceBox cb_b2;
+    
+    @FXML
+    private PieChart pc_br1;
+    @FXML
+    private PieChart pc_br2;
+    @FXML 
+    private ChoiceBox cb_type;
+    @FXML
+    private ComboBox cb_brand;
 
     @FXML
     private void handleMenuAction(ActionEvent event) throws SQLException {
@@ -321,18 +340,39 @@ public class FXMLDocumentController implements Initializable {
         }
         //barc4.setTitle("手机外观数据统计");
         //barc4.getData().add(apperance_series);
+        
         // show choice bar
-        mobile.stat_product_name();
-        ArrayList<String> pl = mobile.getProduct_name();
-        ObservableList<String> mobile_name = FXCollections.observableArrayList();
-        for (String tmp : pl) {
-            System.out.println("##" + tmp);
-            mobile_name.add(tmp);
+        
+        
+        // MongoDB
+        ArrayList<String> brands;
+        brands = Mobile_brand_mongo.get_all_brand();
+        ObservableList<String> brand_name = FXCollections.observableArrayList();
+        for (String tem: brands){
+            brand_name.add(tem);
         }
-        cbox.setItems(mobile_name);
-
+        
+        cb_b1.setItems(brand_name);
+        cb_b2.setItems(brand_name);
+        
+        cb_b1.getSelectionModel().select(0);
+        cb_b2.getSelectionModel().select(1);
+        
+        cb_brand.setItems(brand_name);
+        
+        // pie_char shows the percentage of different mobile type
+        // pie_char_1
+        pc_br1.setTitle("手机型号分布情况");
+        this.handleBrandButton1(event);
+        //pi_char_2
+        pc_br2.setTitle("手机型号分布情况");
+        this.handleBrandButton2(event);
+        
+        
     }
-
+   
+    
+    
     @FXML
     // unsolved problem : show the percentage for the piechart
     private void showPieChartPercentage(MouseEvent event) {
@@ -416,13 +456,79 @@ public class FXMLDocumentController implements Initializable {
         
 
     }
+    
+    @FXML
+    public void handleComboBoxAction(ActionEvent event){
+        
+        System.out.print("Action handling!");
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_brand.getItems();
+        brand_index = cb_brand.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        
+        ArrayList<String> types = new ArrayList<String>();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            types.add(m.getPhone_name());
+        }       
+        
+        ObservableList<String> type_name = FXCollections.observableArrayList();
+        for (String tem: types){
+            type_name.add(tem);
+        }
+        cb_type.setItems(type_name);
+        cb_type.getSelectionModel().select(0); 
+              
+    }
+    
+    @FXML
+    public void handleBrandButton1(ActionEvent event){
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_b1.getItems();
+        brand_index = cb_b1.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        pc_br1.getData().clear();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        Map mobile_types = mbm.count_type_reviews();
+        for (Object key : mobile_types.keySet()) {
+            int temValue = Integer.valueOf(mobile_types.get(key).toString());
+            String k = key.toString().concat("(" + mobile_types.get(key).toString()+ ")");
+            ObservableList<PieChart.Data> temPiechartData
+                    = FXCollections.observableArrayList(new PieChart.Data(k, temValue));
+            pc_br1.getData().addAll(temPiechartData);
+        }
+
+    }
+    
+    @FXML
+    public void handleBrandButton2(ActionEvent event){
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_b2.getItems();
+        brand_index = cb_b2.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        pc_br2.getData().clear();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        Map mobile_types = mbm.count_type_reviews();
+        for (Object key : mobile_types.keySet()) {
+            int temValue = Integer.valueOf(mobile_types.get(key).toString());
+            String k = key.toString().concat("(" + mobile_types.get(key).toString()+ ")");
+            ObservableList<PieChart.Data> temPiechartData
+                    = FXCollections.observableArrayList(new PieChart.Data(k, temValue));
+            pc_br2.getData().addAll(temPiechartData);
+        }
+
+    }
+    
 
     @FXML
     public void handleMobileButton(ActionEvent event) throws SQLException {
         Mobilephone mobile = new Mobilephone();
         
         int mobile_index = 0;
-        String mobile_selected = new String();
+        String mobile_selected;
         ObservableList<String>mobile_cat = cbox.getItems();
         mobile_index = cbox.getSelectionModel().selectedIndexProperty().getValue();
         mobile_selected = mobile_cat.get(mobile_index);
