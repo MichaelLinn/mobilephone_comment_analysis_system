@@ -10,7 +10,11 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import mobile.Review_mongo;
@@ -37,14 +41,13 @@ public class Mobile_mongo {
         this.review_count = this.mobile.getInteger("review_count");
     }
     
-    public Mobile_mongo(Document doc){
+    public Mobile_mongo(Document doc) throws ParseException{
         this.mobile = doc;
         this.setPhone_name();
         this.setPositive();
         this.setNegative(); 
         this.setReview_count();
     }
-    
 
     public String getPhone_name() {
         return phone_name;
@@ -55,15 +58,40 @@ public class Mobile_mongo {
     }
 
     public ArrayList<Review_mongo> getReviews() {
-        return reviews;
+        return this.reviews;
     }
 
-    public void setReviews(ArrayList<Review_mongo> reviews) {
-        this.reviews = reviews;
+    public void setReviews() throws ParseException {
+        ArrayList<Document> rs = this.mobile.get("reviews", ArrayList.class);
+        for (Document doc: rs){
+            String comment_time = doc.getString("comment_time");
+            String rev = doc.getString("review");
+            String source = doc.getString("source");
+            Review_mongo re = new Review_mongo(comment_time, source, rev);
+            this.reviews.add(re);
+        }
+    }
+    
+    public double countTotalFaverableRate(){
+        
+        int faverable_count = 0;
+        int difference_count = 0;
+        for (String key: this.positive.keySet()){
+            faverable_count += this.positive.get(key);
+            try{
+                difference_count += this.negative.get(key);
+            }catch(Exception e){
+                difference_count += 0;                
+            }
+     
+        }     
+        double fa_rate = 1.0 * faverable_count / ( faverable_count + difference_count) ;
+        // System.out.println("%%%%%%%%%%%" + fa_rate + "%%%%%%%%%%%");
+        return fa_rate;
     }
 
     public Map<String, Integer> getPositive() {
-        return positive;
+        return this.positive;
     }
 
     public void setPositive() {
@@ -77,7 +105,7 @@ public class Mobile_mongo {
     }
 
     public Map<String, Integer> getNegative() {
-        return negative;
+        return this.negative;
     }
 
     public void setNegative() {

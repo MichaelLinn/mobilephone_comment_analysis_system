@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import mobile.Mobilephone;
 import java.net.URL;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -155,9 +156,19 @@ public class FXMLDocumentController implements Initializable {
     private ChoiceBox cb_type;
     @FXML
     private ComboBox cb_brand;
-
     @FXML
-    private void handleMenuAction(ActionEvent event) throws SQLException {
+    private ComboBox cbr_brand;
+    @FXML
+    private ComboBox cbr_type;
+    @FXML
+    private ComboBox cb_fa;
+    @FXML
+    private NumberAxis na;
+    @FXML
+    private StackedBarChart sbc_fa;
+    
+    @FXML
+    private void handleMenuAction(ActionEvent event) throws SQLException, ParseException {
 
         //PieChart
         Mobilephone mobile = new Mobilephone();
@@ -282,7 +293,7 @@ public class FXMLDocumentController implements Initializable {
         barc1.setTitle("手机功能数据统计");
         barc1.getData().add(category_series);
         
-//all_category_tableView
+        //all_category_tableView
         ObservableList<Mobile_info> al = FXCollections.observableArrayList();
         ArrayList<Mobile_info> ma = mobile.getMobile_infos_all();
         TableColumn ca1 = new TableColumn("手机功能");
@@ -354,12 +365,18 @@ public class FXMLDocumentController implements Initializable {
         
         cb_b1.setItems(brand_name);
         cb_b2.setItems(brand_name);
+        cbr_brand.setItems(brand_name);
+        cbr_brand.getSelectionModel().select(0);
+        
+        cb_fa.setItems(brand_name);
+        cb_fa.getSelectionModel().select(0);
         
         cb_b1.getSelectionModel().select(0);
         cb_b2.getSelectionModel().select(1);
         
         cb_brand.setItems(brand_name);
-        
+        cb_brand.getSelectionModel().select(0);
+        this.handleComboBoxAction(event);
         // pie_char shows the percentage of different mobile type
         // pie_char_1
         pc_br1.setTitle("手机型号分布情况");
@@ -368,12 +385,299 @@ public class FXMLDocumentController implements Initializable {
         pc_br2.setTitle("手机型号分布情况");
         this.handleBrandButton2(event);
         
-        
     }
    
-    
+    @FXML
+    private void handleCommentShowButton(ActionEvent event) throws ParseException{
+        
+        String brand;
+        String type;
+        
+        ObservableList<String> mobile_cat = cbr_brand.getItems();
+        
+        brand = cbr_brand.getSelectionModel().selectedItemProperty().getValue().toString();
+        type = cbr_type.getSelectionModel().selectedItemProperty().getValue().toString();
+        
+        ObservableList<Review_mongo> list = FXCollections.observableArrayList();
+        ArrayList<Review_mongo> reviews = null;
+        
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand);
+        
+        for (Mobile_mongo mobile: mbm.getMobiles()){
+            if (mobile.getPhone_name().equals(type)){
+                mobile.setReviews();
+                reviews = mobile.getReviews();
+            }
+        }
+        
+        TableColumn col1 = new TableColumn("source");
+        col1.setPrefWidth(90);
+        
+        TableColumn col2 = new TableColumn("comment_time");
+        TableColumn col3 = new TableColumn("review");
+
+
+        col1.setCellValueFactory(new PropertyValueFactory("source"));
+        col2.setCellValueFactory(new PropertyValueFactory("comment_time"));
+        col3.setCellValueFactory(new PropertyValueFactory("review"));
+;
+
+        for (Review_mongo rm : reviews) {
+            list.add(rm);
+        }
+        tv.getItems().clear();
+        tv.getColumns().clear();
+        tv.getColumns().addAll(col1, col2, col3);
+        tv.setItems(list);
+        
+    } 
     
     @FXML
+    public void startButton(ActionEvent event) throws InterruptedException, SQLException, ParseException {
+        Double[] values = new Double[100];
+        double t = 0;
+        for (int i = 0; i < 100; i++) {
+            t += 0.01;
+            values[i] = t;
+        }
+        pb.setProgress(1);
+        pi.setProgress(1);
+        start_button.setText("分析完成");
+        start_button.setDisable(true);
+        mi1.setDisable(true);
+        
+        handleMenuAction(event);
+        
+
+    }
+    
+    @FXML
+    public void handleComboBoxAction(ActionEvent event) throws ParseException{
+        
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_brand.getItems();
+        brand_index = cb_brand.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        
+        ArrayList<String> types = new ArrayList<String>();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            types.add(m.getPhone_name());
+        }       
+        
+        ObservableList<String> type_name = FXCollections.observableArrayList();
+        for (String tem: types){
+            type_name.add(tem);
+        }
+        cb_type.setItems(type_name);
+        cb_type.getSelectionModel().select(0); 
+              
+    }
+    
+        @FXML
+    public void handleComboBoxAction2(ActionEvent event) throws ParseException{
+        
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cbr_brand.getItems();
+        brand_index = cbr_brand.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        
+        ArrayList<String> types = new ArrayList<String>();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            types.add(m.getPhone_name());
+        }       
+        
+        ObservableList<String> type_name = FXCollections.observableArrayList();
+        for (String tem: types){
+            type_name.add(tem);
+        }
+        cbr_type.setItems(type_name);
+        cbr_type.getSelectionModel().select(0); 
+    }
+    
+    @FXML
+    private void handleFaverableRateButton(ActionEvent event) throws ParseException{
+        String brand = cb_fa.getSelectionModel().selectedItemProperty().getValue().toString();
+        System.out.print("***********"+ brand +"**********");
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand);
+               
+        XYChart.Series<String, Number> pos = new XYChart.Series();
+        XYChart.Series<String, Number> neg = new XYChart.Series();
+        // XYChart.Series<String, Number> t = new XYChart.Series();
+        
+        for (Mobile_mongo mobile: mbm.getMobiles()){
+            
+            int pos_percentage = (int)(mobile.countTotalFaverableRate() * 100);
+            int neg_percentage = 100 - pos_percentage;
+           
+            pos.getData().addAll(new XYChart.Data<>(mobile.getPhone_name(), pos_percentage));
+            neg.getData().addAll(new XYChart.Data<>(mobile.getPhone_name(), neg_percentage));
+        }
+        
+        pos.setName("正面评价百分数");
+        neg.setName("负面评价百分数");
+        
+        na.setAutoRanging(false);
+        na.setUpperBound(100);
+        
+        sbc_fa.getData().clear();
+        sbc_fa.getData().addAll(pos);
+        sbc_fa.getData().addAll(neg);
+               
+    }
+    
+    @FXML
+    public void handleBrandButton1(ActionEvent event) throws ParseException{
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_b1.getItems();
+        brand_index = cb_b1.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        pc_br1.getData().clear();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        Map mobile_types = mbm.count_type_reviews();
+        for (Object key : mobile_types.keySet()) {
+            int temValue = Integer.valueOf(mobile_types.get(key).toString());
+            String k = key.toString().concat("(" + mobile_types.get(key).toString()+ ")");
+            ObservableList<PieChart.Data> temPiechartData
+                    = FXCollections.observableArrayList(new PieChart.Data(k, temValue));
+            pc_br1.getData().addAll(temPiechartData);
+        }
+
+    }
+    
+    @FXML
+    public void handleBrandButton2(ActionEvent event) throws ParseException{
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_b2.getItems();
+        brand_index = cb_b2.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        pc_br2.getData().clear();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        Map mobile_types = mbm.count_type_reviews();
+        for (Object key : mobile_types.keySet()) {
+            int temValue = Integer.valueOf(mobile_types.get(key).toString());
+            String k = key.toString().concat("(" + mobile_types.get(key).toString()+ ")");
+            ObservableList<PieChart.Data> temPiechartData
+                    = FXCollections.observableArrayList(new PieChart.Data(k, temValue));
+            pc_br2.getData().addAll(temPiechartData);
+        }
+
+    }
+    
+
+    @FXML
+    public void handleMobileAnalysisButton(ActionEvent event) throws SQLException, ParseException {
+        
+        Mobilephone mobile = new Mobilephone();
+        
+        int index = 0;
+        String brand_selected = null;
+        String type_selected = null;
+        // get mobile brand
+        ObservableList<String> items = cb_brand.getItems();
+        index = cb_brand.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = items.get(index);
+        // get mobile type
+        items = cb_type.getItems();
+        index = cb_brand.getSelectionModel().selectedIndexProperty().getValue();
+        type_selected = items.get(index);
+        System.out.println("--------------" + type_selected + "--------------");
+
+        
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        Mobile_mongo mobile_type = null;
+        for (Mobile_mongo m:mbm.getMobiles()){
+            if (m.getPhone_name().trim().equals(type_selected.trim())){
+                mobile_type = m;
+                break;
+            }
+        }
+        
+        Map<String, Integer> pos_map = mobile_type.getPositive();
+        Map<String, Integer> neg_map = mobile_type.getNegative();
+        
+        XYChart.Series<String, Number> pos1 = new XYChart.Series();
+        XYChart.Series<String, Number> neg1 = new XYChart.Series();
+        XYChart.Series<String, Number> t = new XYChart.Series();
+        
+        ArrayList<String> category = new ArrayList<String>();
+        ArrayList<Integer> pos = new ArrayList<Integer>();
+        ArrayList<Integer> neg = new ArrayList<Integer>();
+        
+        for (String key: pos_map.keySet()){
+            category.add(key);
+            pos.add(pos_map.get(key));
+            neg.add(neg_map.get(key));
+        }
+        
+        ObservableList<Mobile_category_info> list = FXCollections.observableArrayList();
+        ArrayList<Mobile_category_info> ms = new ArrayList<Mobile_category_info>();  
+        
+        String s = new String("      该手机品牌为");
+        s = s.concat(type_selected+"，其中");
+        
+        int pos_sum = 0;
+        int neg_sum = 0;
+        for (int i = 0; i < category.size(); i++) {
+            //Mobile_category_info mci = new Mobile_category_info();
+            pos_sum += pos.get(i);
+            neg_sum += neg.get(i);
+            int pos_percent = (int) ((1.0 * pos.get(i) / (pos.get(i) + neg.get(i))) * 100);
+            int neg_percent = 100 - pos_percent;
+            s = s.concat(category.get(i) + "属性好评率为" + pos_percent + "%，" + "差评率为" + neg_percent + "%；");
+            pos1.getData().addAll(new XYChart.Data<>(category.get(i), pos_percent));
+            neg1.getData().addAll(new XYChart.Data<>(category.get(i), neg_percent));
+            Mobile_category_info m = new Mobile_category_info();
+            m.setCategory(category.get(i));
+            m.setPos_num(pos.get(i));
+            m.setNeg_num(neg.get(i));
+            m.setPos_percent();
+            ms.add(m);   
+        }
+        
+      
+        int pos_sum_percent = (int)(100.0 * pos_sum / (pos_sum + neg_sum));
+        s = s.concat("该手机的总好评率为" + pos_sum_percent + "%，总差评率为" + (100 - pos_sum_percent) + "%。");
+        
+        for(Mobile_category_info a : ms){
+            list.add(a);
+        }
+        pos1.setName("正面评价百分数");
+        neg1.setName("负面评价百分数");
+        
+        num_axis.setAutoRanging(false);
+        num_axis.setUpperBound(100);
+        
+        mobile_sbc.getData().clear();
+        mobile_sbc.getData().addAll(pos1);
+        mobile_sbc.getData().addAll(neg1);
+        TableColumn c1 = new TableColumn("手机品牌");
+        TableColumn c2 = new TableColumn("正面评论数");
+        TableColumn c3 = new TableColumn("负面评论数");
+        TableColumn c4 = new TableColumn("正面百分比");
+        
+        c1.setCellValueFactory(new PropertyValueFactory("category"));
+        c2.setCellValueFactory(new PropertyValueFactory("pos_num"));
+        c3.setCellValueFactory(new PropertyValueFactory("neg_num"));
+        c4.setCellValueFactory(new PropertyValueFactory("pos_percent"));
+        
+        category_tv.getColumns().clear();
+        category_tv.getColumns().addAll(c1,c2,c3,c4);
+        category_tv.setItems(list);
+        
+        
+        summary.setWrapText(true);
+        summary.setText(s);        
+        // summary.appendText("Hello World！");
+        
+    }
+    
+        @FXML
     // unsolved problem : show the percentage for the piechart
     private void showPieChartPercentage(MouseEvent event) {
         Label caption = new Label("");
@@ -438,169 +742,6 @@ public class FXMLDocumentController implements Initializable {
 
     }
 
-    @FXML
-    public void startButton(ActionEvent event) throws InterruptedException, SQLException {
-        Double[] values = new Double[100];
-        double t = 0;
-        for (int i = 0; i < 100; i++) {
-            t += 0.01;
-            values[i] = t;
-        }
-        pb.setProgress(1);
-        pi.setProgress(1);
-        start_button.setText("分析完成");
-        start_button.setDisable(true);
-        mi1.setDisable(true);
-        
-        handleMenuAction(event);
-        
-
-    }
-    
-    @FXML
-    public void handleComboBoxAction(ActionEvent event){
-        
-        System.out.print("Action handling!");
-        int brand_index = 0;
-        String brand_selected;
-        ObservableList<String>mobile_cat = cb_brand.getItems();
-        brand_index = cb_brand.getSelectionModel().selectedIndexProperty().getValue();
-        brand_selected = mobile_cat.get(brand_index);
-        
-        ArrayList<String> types = new ArrayList<String>();
-        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
-        for (Mobile_mongo m: mbm.getMobiles()){
-            types.add(m.getPhone_name());
-        }       
-        
-        ObservableList<String> type_name = FXCollections.observableArrayList();
-        for (String tem: types){
-            type_name.add(tem);
-        }
-        cb_type.setItems(type_name);
-        cb_type.getSelectionModel().select(0); 
-              
-    }
-    
-    @FXML
-    public void handleBrandButton1(ActionEvent event){
-        int brand_index = 0;
-        String brand_selected;
-        ObservableList<String>mobile_cat = cb_b1.getItems();
-        brand_index = cb_b1.getSelectionModel().selectedIndexProperty().getValue();
-        brand_selected = mobile_cat.get(brand_index);
-        pc_br1.getData().clear();
-        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
-        Map mobile_types = mbm.count_type_reviews();
-        for (Object key : mobile_types.keySet()) {
-            int temValue = Integer.valueOf(mobile_types.get(key).toString());
-            String k = key.toString().concat("(" + mobile_types.get(key).toString()+ ")");
-            ObservableList<PieChart.Data> temPiechartData
-                    = FXCollections.observableArrayList(new PieChart.Data(k, temValue));
-            pc_br1.getData().addAll(temPiechartData);
-        }
-
-    }
-    
-    @FXML
-    public void handleBrandButton2(ActionEvent event){
-        int brand_index = 0;
-        String brand_selected;
-        ObservableList<String>mobile_cat = cb_b2.getItems();
-        brand_index = cb_b2.getSelectionModel().selectedIndexProperty().getValue();
-        brand_selected = mobile_cat.get(brand_index);
-        pc_br2.getData().clear();
-        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
-        Map mobile_types = mbm.count_type_reviews();
-        for (Object key : mobile_types.keySet()) {
-            int temValue = Integer.valueOf(mobile_types.get(key).toString());
-            String k = key.toString().concat("(" + mobile_types.get(key).toString()+ ")");
-            ObservableList<PieChart.Data> temPiechartData
-                    = FXCollections.observableArrayList(new PieChart.Data(k, temValue));
-            pc_br2.getData().addAll(temPiechartData);
-        }
-
-    }
-    
-
-    @FXML
-    public void handleMobileButton(ActionEvent event) throws SQLException {
-        Mobilephone mobile = new Mobilephone();
-        
-        int mobile_index = 0;
-        String mobile_selected;
-        ObservableList<String>mobile_cat = cbox.getItems();
-        mobile_index = cbox.getSelectionModel().selectedIndexProperty().getValue();
-        mobile_selected = mobile_cat.get(mobile_index);
-        mobile.analyse_mobile(mobile_selected);
-       
-        
-        XYChart.Series<String, Number> pos1 = new XYChart.Series();
-        XYChart.Series<String, Number> neg1 = new XYChart.Series();
-        XYChart.Series<String, Number> t = new XYChart.Series();
-        ArrayList<String> category = mobile.getCategory_name();
-        ArrayList<Integer> pos = mobile.getPos_product();
-        ArrayList<Integer> neg = mobile.getNeg_product();
-        
-        ObservableList<Mobile_category_info> list = FXCollections.observableArrayList();
-        ArrayList<Mobile_category_info> ms = new ArrayList<Mobile_category_info>();  
-        
-        String s = new String("      该手机品牌为");
-        s = s.concat(mobile_selected+"，其中");
-              
-        int pos_sum = 0;
-        int neg_sum = 0;
-        for (int i = 0; i < category.size(); i++) {
-            //Mobile_category_info mci = new Mobile_category_info();
-            pos_sum += pos.get(i);
-            neg_sum += neg.get(i);
-            int pos_percent = (int) ((1.0 * pos.get(i) / (pos.get(i) + neg.get(i))) * 100);
-            int neg_percent = 100 - pos_percent;
-            s = s.concat(category.get(i) + "属性好评率为" + pos_percent + "%，" + "差评率为" + neg_percent + "%；");
-            pos1.getData().addAll(new XYChart.Data<>(category.get(i), pos_percent));
-            neg1.getData().addAll(new XYChart.Data<>(category.get(i), neg_percent));
-            Mobile_category_info m = new Mobile_category_info();
-            m.setCategory(category.get(i));
-            m.setPos_num(pos.get(i));
-            m.setNeg_num(neg.get(i));
-            m.setPos_percent();
-            ms.add(m);   
-        }
-        int pos_sum_percent = (int)(100.0 * pos_sum / (pos_sum + neg_sum));
-        s = s.concat("该手机的总好评率为" + pos_sum_percent + "%，总差评率为" + (100 - pos_sum_percent) + "%。");
-        
-        for(Mobile_category_info a : ms){
-            list.add(a);
-        }
-        pos1.setName("正面评价百分数");
-        neg1.setName("负面评价百分数");
-        
-        num_axis.setAutoRanging(false);
-        num_axis.setUpperBound(100);
-        
-        mobile_sbc.getData().clear();
-        mobile_sbc.getData().addAll(pos1);
-        mobile_sbc.getData().addAll(neg1);
-        TableColumn c1 = new TableColumn("手机品牌");
-        TableColumn c2 = new TableColumn("正面评论数");
-        TableColumn c3 = new TableColumn("负面评论数");
-        TableColumn c4 = new TableColumn("正面百分比");
-        
-        c1.setCellValueFactory(new PropertyValueFactory("category"));
-        c2.setCellValueFactory(new PropertyValueFactory("pos_num"));
-        c3.setCellValueFactory(new PropertyValueFactory("neg_num"));
-        c4.setCellValueFactory(new PropertyValueFactory("pos_percent"));
-        
-        category_tv.getColumns().clear();
-        category_tv.getColumns().addAll(c1,c2,c3,c4);
-        category_tv.setItems(list);
-        
-        
-        summary.setWrapText(true);
-        summary.setText(s);        
-        // summary.appendText("Hello World！");
-        
-    }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {

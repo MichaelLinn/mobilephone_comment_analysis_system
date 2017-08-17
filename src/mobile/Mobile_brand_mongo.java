@@ -9,11 +9,11 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import mobile.Mobile_mongo;
-import static mobile.Review_mongo.mongodb_address;
 import org.bson.Document;
 /**
  *
@@ -26,7 +26,8 @@ public class Mobile_brand_mongo {
     private String mobile_brand = new String();
     
     
-    public Mobile_brand_mongo(String mobile_brand){
+    
+    public Mobile_brand_mongo(String mobile_brand) throws ParseException{
         this.setMobile_brand(mobile_brand);
         this.setMobiles();
     }
@@ -47,7 +48,7 @@ public class Mobile_brand_mongo {
         return mobiles;
     }
 
-    public void setMobiles() {
+    public void setMobiles() throws ParseException {
         Document doc;
         MongoDatabase DB = Mobile_brand_mongo.connect_to_DB();
         MongoCollection collection = DB.getCollection(this.mobile_brand);
@@ -82,6 +83,7 @@ public class Mobile_brand_mongo {
         }
         return mongoDB;
     }
+    
     public static ArrayList<String> get_all_brand(){
         ArrayList<String> brands = new ArrayList<String>();
         MongoDatabase db = Mobile_brand_mongo.connect_to_DB();
@@ -95,8 +97,7 @@ public class Mobile_brand_mongo {
         return brands;
     }
     
-    
-    public static void main(String args[]){
+    public static void main(String args[]) throws ParseException{
         Mobile_brand_mongo mbm = new Mobile_brand_mongo("APPLE");
             for (Mobile_mongo mobile: mbm.mobiles){
                 System.out.println(mobile.getPhone_name());
