@@ -277,7 +277,7 @@
                                     <Font name="Serif Bold" size="16.0" />
                                  </font>
                               </Label>
-                              <TableView layoutX="1092.0" layoutY="149.0" prefHeight="535.0" prefWidth="220.0" />
+                              <TableView fx:id="tv_fa" layoutX="1098.0" layoutY="139.0" prefHeight="484.0" prefWidth="213.0" />
                               <ComboBox fx:id="cb_fa" layoutX="572.0" layoutY="42.0" prefHeight="24.0" prefWidth="178.0" />
                               <Button layoutX="782.0" layoutY="40.0" mnemonicParsing="false" onAction="#handleFaverableRateButton" prefHeight="28.0" prefWidth="48.0" text="确定" />
                               <StackedBarChart fx:id="sbc_fa" categoryGap="46.0" layoutX="17.0" layoutY="106.0" prefHeight="608.0" prefWidth="1063.0">

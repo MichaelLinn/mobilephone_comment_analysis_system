@@ -166,6 +166,9 @@ public class FXMLDocumentController implements Initializable {
     private NumberAxis na;
     @FXML
     private StackedBarChart sbc_fa;
+    @FXML
+    private TableView tv_fa;
+    
     
     @FXML
     private void handleMenuAction(ActionEvent event) throws SQLException, ParseException {
@@ -507,6 +510,7 @@ public class FXMLDocumentController implements Initializable {
         XYChart.Series<String, Number> pos = new XYChart.Series();
         XYChart.Series<String, Number> neg = new XYChart.Series();
         // XYChart.Series<String, Number> t = new XYChart.Series();
+        ObservableList<Mobile_mongo> mobile_list = FXCollections.observableArrayList();
         
         for (Mobile_mongo mobile: mbm.getMobiles()){
             
@@ -515,6 +519,9 @@ public class FXMLDocumentController implements Initializable {
            
             pos.getData().addAll(new XYChart.Data<>(mobile.getPhone_name(), pos_percentage));
             neg.getData().addAll(new XYChart.Data<>(mobile.getPhone_name(), neg_percentage));
+            
+            mobile_list.add(mobile);
+            
         }
         
         pos.setName("正面评价百分数");
@@ -526,7 +533,17 @@ public class FXMLDocumentController implements Initializable {
         sbc_fa.getData().clear();
         sbc_fa.getData().addAll(pos);
         sbc_fa.getData().addAll(neg);
-               
+        
+        TableColumn c1 = new TableColumn("手机型号");
+        TableColumn c2 = new TableColumn("好评率");
+        c1.setPrefWidth(150);
+        c1.setCellValueFactory(new PropertyValueFactory("phone_name"));
+        c2.setCellValueFactory(new PropertyValueFactory("faverable_rate"));
+        
+        
+        tv_fa.getColumns().clear();
+        tv_fa.getColumns().addAll(c1,c2);
+        tv_fa.setItems(mobile_list);
     }
     
     @FXML
@@ -669,8 +686,7 @@ public class FXMLDocumentController implements Initializable {
         category_tv.getColumns().clear();
         category_tv.getColumns().addAll(c1,c2,c3,c4);
         category_tv.setItems(list);
-        
-        
+              
         summary.setWrapText(true);
         summary.setText(s);        
         // summary.appendText("Hello World！");

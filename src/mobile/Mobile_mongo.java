@@ -31,6 +31,7 @@ public class Mobile_mongo {
     private Map<String, Integer> positive;
     private Map<String, Integer> negative;
     private Document mobile;
+    private String faverable_rate;
     private int review_count = 0;
 
     public int getReview_count() {
@@ -87,7 +88,17 @@ public class Mobile_mongo {
         }     
         double fa_rate = 1.0 * faverable_count / ( faverable_count + difference_count) ;
         // System.out.println("%%%%%%%%%%%" + fa_rate + "%%%%%%%%%%%");
+        String rate = String.valueOf((int)(fa_rate * 100)) + "%";
+        this.setFaverable_rate(rate);
         return fa_rate;
+    }
+
+    public String getFaverable_rate() {
+        return faverable_rate;
+    }
+
+    public void setFaverable_rate(String faverable_rate) {
+        this.faverable_rate = faverable_rate;
     }
 
     public Map<String, Integer> getPositive() {
