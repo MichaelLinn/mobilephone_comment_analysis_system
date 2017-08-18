@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import mobile.Mobilephone;
 import java.net.URL;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.StackedBarChart;
@@ -169,10 +171,25 @@ public class FXMLDocumentController implements Initializable {
     @FXML
     private TableView tv_fa;
     
+    @FXML
+    private ComboBox cb_com_brand1;
+    @FXML
+    private ComboBox cb_com_type1;
+    @FXML
+    private ComboBox cb_com_brand2;
+    @FXML
+    private ComboBox cb_com_type2;
+    @FXML
+    private TableView tv_com;
+    @FXML
+    private LineChart lc_com;
+    
     
     @FXML
     private void handleMenuAction(ActionEvent event) throws SQLException, ParseException {
-
+        
+        
+        /*
         //PieChart
         Mobilephone mobile = new Mobilephone();
         Map product_map = mobile.stat_ZOL_forum();
@@ -231,9 +248,10 @@ public class FXMLDocumentController implements Initializable {
 
         bc.getData().addAll(series2);
         bc.getData().addAll(series1);
-
+        */
 
         //TableView
+        /*
         mobile.gen_comment_table_view();
         ObservableList<Page_data> list = FXCollections.observableArrayList();
         ArrayList<Page_data> p_datas = mobile.getP_datas();
@@ -256,8 +274,9 @@ public class FXMLDocumentController implements Initializable {
         }
         tv.getColumns().addAll(col1, col2, col3, col4, col5);
         tv.setItems(list);
-
+        */
         // sub_tableView_lenovo
+        /*
         ObservableList<Mobile_info> l = FXCollections.observableArrayList();
         ArrayList<Mobile_info> ms = mobile.getMobile_infos_lenovo();
         TableColumn c1 = new TableColumn("手机品牌");
@@ -284,7 +303,8 @@ public class FXMLDocumentController implements Initializable {
         }
         sub_tv11.getColumns().addAll(c11, c21);
         sub_tv11.setItems(l2);
-
+        */
+        /*
         //all_category_bar_chart
         Map category_map;
         category_map = mobile.stat_all_category();
@@ -324,7 +344,7 @@ public class FXMLDocumentController implements Initializable {
 
         //software bar_chart
         Map software_map;
-        software_map = mobile.stat_software();
+        software_map = mobile.stat_software        ();
         XYChart.Series software_series = new XYChart.Series();
         software_series.setName("记录数量");
         for (Object key : software_map.keySet()) {
@@ -356,7 +376,7 @@ public class FXMLDocumentController implements Initializable {
         //barc4.getData().add(apperance_series);
         
         // show choice bar
-        
+        */
         
         // MongoDB
         ArrayList<String> brands;
@@ -380,6 +400,12 @@ public class FXMLDocumentController implements Initializable {
         cb_brand.setItems(brand_name);
         cb_brand.getSelectionModel().select(0);
         this.handleComboBoxAction(event);
+        
+        cb_com_brand1.setItems(brand_name);
+        cb_com_brand2.setItems(brand_name);
+        cb_com_brand1.getSelectionModel().select(0);
+        cb_com_brand2.getSelectionModel().select(0);
+        
         // pie_char shows the percentage of different mobile type
         // pie_char_1
         pc_br1.setTitle("手机型号分布情况");
@@ -388,8 +414,13 @@ public class FXMLDocumentController implements Initializable {
         pc_br2.setTitle("手机型号分布情况");
         this.handleBrandButton2(event);
         
+        this.handleCommentShowButton(event);
+        this.handleFaverableRateButton(event);
+        
     }
    
+    
+    
     @FXML
     private void handleCommentShowButton(ActionEvent event) throws ParseException{
         
@@ -455,6 +486,73 @@ public class FXMLDocumentController implements Initializable {
     }
     
     @FXML
+    public void handleComparedButton(ActionEvent event) throws ParseException{
+        String brand1;
+        String brand2;
+        String type1;
+        String type2;
+        Mobile_brand_mongo mbm;
+        Mobile_mongo mobile1 = null;
+        Mobile_mongo mobile2 = null;
+        
+        brand1 = cb_com_brand1.getSelectionModel().selectedItemProperty().getValue().toString();
+        brand2 = cb_com_brand2.getSelectionModel().selectedItemProperty().getValue().toString();
+        type1 = cb_com_type1.getSelectionModel().selectedItemProperty().getValue().toString();
+        type2 = cb_com_type2.getSelectionModel().selectedItemProperty().getValue().toString();
+        
+        //TableView
+        ObservableList<ComparedFeatureInfo> feature_list = FXCollections.observableArrayList();
+        //LineChart
+        XYChart.Series type1_series = new XYChart.Series();
+        XYChart.Series type2_series = new XYChart.Series();
+        
+        
+        mbm = new Mobile_brand_mongo(brand1);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            if (m.getPhone_name().equals(type1)){
+                mobile1 = m;
+                break;
+            }
+        }
+        mbm = new Mobile_brand_mongo(brand2);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            if (m.getPhone_name().equals(type2)){
+                mobile2 = m;
+                break;
+            }
+        }
+        for (String key: mobile1.getPositive().keySet()){
+            double type1_rate = mobile1.getFeature_faRate().get(key);
+            double type2_rate = mobile2.getFeature_faRate().get(key);
+            feature_list.add(new ComparedFeatureInfo(key, type1_rate, type2_rate));
+            type1_series.getData().add(new XYChart.Data(key, type1_rate));
+            type2_series.getData().add(new XYChart.Data(key, type2_rate));
+        }
+        
+        TableColumn c1 = new TableColumn("手机参数");
+        TableColumn c2 = new TableColumn(mobile1.getPhone_name());
+        TableColumn c3 = new TableColumn(mobile2.getPhone_name());
+        
+        c1.setCellValueFactory(new PropertyValueFactory("feature"));
+        c2.setCellValueFactory(new PropertyValueFactory("type1_fa"));
+        c3.setCellValueFactory(new PropertyValueFactory("type2_fa"));
+        
+        //TableView
+        tv_com.getColumns().clear();
+        tv_com.getColumns().addAll(c1,c2,c3);
+        tv_com.setItems(feature_list);
+        //LineChart
+        type1_series.setName(mobile1.getPhone_name());
+        type2_series.setName(mobile2.getPhone_name());
+        
+        lc_com.getData().clear();
+        lc_com.getData().addAll(type1_series, type2_series);
+            
+        
+    }
+    
+
+    @FXML
     public void handleComboBoxAction(ActionEvent event) throws ParseException{
         
         int brand_index = 0;
@@ -478,7 +576,56 @@ public class FXMLDocumentController implements Initializable {
               
     }
     
-        @FXML
+    @FXML
+    public void handleComparedComboBox1Action(ActionEvent event) throws ParseException{
+        
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_com_brand1.getItems();
+        brand_index = cb_com_brand1.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        
+        ArrayList<String> types = new ArrayList<String>();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            types.add(m.getPhone_name());
+        }       
+        
+        ObservableList<String> type_name = FXCollections.observableArrayList();
+        for (String tem: types){
+            type_name.add(tem);
+        }
+        cb_com_type1.setItems(type_name);
+        cb_com_type1.getSelectionModel().select(0); 
+              
+    }
+    
+    
+    @FXML
+    public void handleComparedComboBox2Action(ActionEvent event) throws ParseException{
+        
+        int brand_index = 0;
+        String brand_selected;
+        ObservableList<String>mobile_cat = cb_com_brand2.getItems();
+        brand_index = cb_com_brand2.getSelectionModel().selectedIndexProperty().getValue();
+        brand_selected = mobile_cat.get(brand_index);
+        
+        ArrayList<String> types = new ArrayList<String>();
+        Mobile_brand_mongo mbm = new Mobile_brand_mongo(brand_selected);
+        for (Mobile_mongo m: mbm.getMobiles()){
+            types.add(m.getPhone_name());
+        }       
+        
+        ObservableList<String> type_name = FXCollections.observableArrayList();
+        for (String tem: types){
+            type_name.add(tem);
+        }
+        cb_com_type2.setItems(type_name);
+        cb_com_type2.getSelectionModel().select(0); 
+              
+    }
+    
+    @FXML
     public void handleComboBoxAction2(ActionEvent event) throws ParseException{
         
         int brand_index = 0;
@@ -763,6 +910,41 @@ public class FXMLDocumentController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
         mobile_sbc.getData().removeAll(0, 1);
+    }
+    
+    public class ComparedFeatureInfo{
+        private String feature;
+        private String type1_fa;
+        private String type2_fa;
+
+        public String getFeature() {
+            return feature;
+        }
+
+        public String getType1_fa() {
+            return type1_fa;
+        }
+
+        public String getType2_fa() {
+            return type2_fa;
+        }
+        
+        public ComparedFeatureInfo(){
+            
+        }
+        
+        public ComparedFeatureInfo(String feature, double type1_rate, double type2_rate){
+            this.feature = feature;
+            this.type1_fa = this.transferDouble2String(type1_rate);
+            this.type2_fa = this.transferDouble2String(type2_rate);
+        }
+        
+        public String transferDouble2String(double type_rate){
+            DecimalFormat df = new DecimalFormat("0.00");
+            String rate = df.format((type_rate * 100)) + "%";
+            return rate;
+        }
+        
     }
 
 }

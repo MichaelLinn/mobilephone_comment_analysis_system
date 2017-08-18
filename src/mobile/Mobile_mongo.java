@@ -11,6 +11,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,9 +31,31 @@ public class Mobile_mongo {
     private ArrayList<Review_mongo> reviews = new ArrayList<Review_mongo>();
     private Map<String, Integer> positive;
     private Map<String, Integer> negative;
+    private Map<String, Double> feature_faRate;
     private Document mobile;
     private String faverable_rate;
     private int review_count = 0;
+
+    public Map<String, Double> getFeature_faRate() {
+        return feature_faRate;
+    }
+
+    public void setFeature_faRate() {
+        Map<String, Double> rate = new HashMap();  
+        
+        for (String key: this.positive.keySet()){
+            int pos_n = this.positive.get(key);
+            int neg_n = 0;
+            try{
+                neg_n = this.negative.get(key);
+            }catch(Exception e){
+                neg_n = 0;
+            }
+            double fa_rate = 1.0 * pos_n / (pos_n + neg_n);
+            rate.put(key, fa_rate);
+        }
+        this.feature_faRate = rate;
+    }
 
     public int getReview_count() {
         return review_count;
@@ -48,6 +71,7 @@ public class Mobile_mongo {
         this.setPositive();
         this.setNegative(); 
         this.setReview_count();
+        this.setFeature_faRate();
     }
 
     public String getPhone_name() {
@@ -86,10 +110,12 @@ public class Mobile_mongo {
             }
      
         }     
+        DecimalFormat df = new DecimalFormat("0.00");
         double fa_rate = 1.0 * faverable_count / ( faverable_count + difference_count) ;
         // System.out.println("%%%%%%%%%%%" + fa_rate + "%%%%%%%%%%%");
-        String rate = String.valueOf((int)(fa_rate * 100)) + "%";
+        String rate = df.format((fa_rate * 100)) + "%";
         this.setFaverable_rate(rate);
+        
         return fa_rate;
     }
 
