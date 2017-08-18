@@ -50,6 +50,7 @@ public class Review_mongo {
 
     public void setComment_time(String comment_time) throws ParseException {
         DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        DateFormat fmt2 = new SimpleDateFormat("yyyy-MM-dd");
         DateFormat fmt1 = new SimpleDateFormat("于 yyyy年MM月dd日");
         Date date =null;
         try {
@@ -57,7 +58,11 @@ public class Review_mongo {
             
         } catch (ParseException ex) {
             Logger.getLogger(Review_mongo.class.getName()).log(Level.SEVERE, null, ex);
-            date = fmt1.parse(comment_time);
+            try{
+                date = fmt1.parse(comment_time);
+            }catch(ParseException ex1){
+                date = fmt2.parse(comment_time);
+            }
         }
         this.comment_time = date;
     }
