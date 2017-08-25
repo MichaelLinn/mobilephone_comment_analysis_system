@@ -66,12 +66,6 @@ public class Mobilephone {
         return this.neg_product;
     }
 
-    public static void main(String[] args) throws SQLException {
-        // TODO code application logic here
-        Mobilephone test = new Mobilephone();
-        test.stat_product_name();
-        test.analyse_mobile(test.product_name.get(0));
-    }
 
     public static Connection connect_to_DB() {
         Connection conn = null;
@@ -286,7 +280,7 @@ public class Mobilephone {
     public ArrayList<String> getCategory_name() {
         return category_name;
     }
-    
+    /*
     public void stat_product_name() throws SQLException{
         Connection conn = Mobilephone.connect_to_DB();
         ArrayList <String> category_name = new ArrayList<String>();
@@ -303,4 +297,5 @@ public class Mobilephone {
         }
         this.product_name = product_name;
     }
+    */
 }

@@ -790,8 +790,17 @@ public class FXMLDocumentController implements Initializable {
         for (int i = 0; i < category.size(); i++) {
             //Mobile_category_info mci = new Mobile_category_info();
             pos_sum += pos.get(i);
-            neg_sum += neg.get(i);
-            int pos_percent = (int) ((1.0 * pos.get(i) / (pos.get(i) + neg.get(i))) * 100);
+            int neg_n = 0;   
+            
+            try{
+                neg_n = neg.get(i);
+                neg_sum += neg.get(i);
+            }catch(Exception e){
+                neg_sum += 0;
+                neg_n = 0;
+            }
+            
+            int pos_percent = (int) ((1.0 * pos.get(i) / (pos.get(i) + neg_n)) * 100);
             int neg_percent = 100 - pos_percent;
             s = s.concat(category.get(i) + "属性好评率为" + pos_percent + "%，" + "差评率为" + neg_percent + "%；");
             pos1.getData().addAll(new XYChart.Data<>(category.get(i), pos_percent));
@@ -799,7 +808,7 @@ public class FXMLDocumentController implements Initializable {
             Mobile_category_info m = new Mobile_category_info();
             m.setCategory(category.get(i));
             m.setPos_num(pos.get(i));
-            m.setNeg_num(neg.get(i));
+            m.setNeg_num(neg_n);
             m.setPos_percent();
             ms.add(m);   
         }

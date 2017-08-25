@@ -96,11 +96,5 @@ public class Mobile_brand_mongo {
         
         return brands;
     }
-    
-    public static void main(String args[]) throws ParseException{
-        Mobile_brand_mongo mbm = new Mobile_brand_mongo("APPLE");
-            for (Mobile_mongo mobile: mbm.mobiles){
-                System.out.println(mobile.getPhone_name());
-            }        
-    }
+
 }
